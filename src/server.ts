@@ -1,6 +1,7 @@
 import axios from "axios";
 import express, { Router, Request, Response } from "express";
-import { FavoriteDatabase, Favorite } from "./databases";
+
+import { FavoriteDatabase, Favorite } from "./FavoriteDatabase";
 
 const api = axios.create();
 
