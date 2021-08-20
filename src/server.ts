@@ -111,7 +111,6 @@ routes.delete(
 
     if (!userHasAddedFavorites) {
       return response.status(400).json({
-        delete: false,
         message: "Este usuário não adicionou nenhum jogo aos favoritos",
       });
     }
@@ -120,7 +119,6 @@ routes.delete(
 
     if (!favorite) {
       return response.status(400).json({
-        delete: false,
         message: "Este jogo já foi removido dos favoritos pelo usuário",
       });
     }
