@@ -1,11 +1,11 @@
-export type Favorite = {
+export type FavoriteGame = {
   grade: number;
   game_id: number;
   user_hash: string;
 };
 
-export class FavoriteDatabase extends Map<string, Favorite[]> {
-  public save(userHash: string, favorite: Favorite) {
+export class FavoriteDatabase extends Map<string, FavoriteGame[]> {
+  public save(userHash: string, favorite: FavoriteGame) {
     const favorites = this.get(userHash);
 
     if (favorites) {
