@@ -61,6 +61,18 @@ routes.get("/", async (request: Request, response: Response) => {
   return response.json(filteredGames);
 });
 
+routes.get("/:id", async (request: Request, response: Response) => {
+  const { id } = request.params;
+
+  const { data } = await api.get(
+    `http://store.steampowered.com/api/appdetails?appids=${id}`
+  );
+
+  const { _, data: gameDetails } = data[id];
+
+  return response.json(gameDetails);
+});
+
 app.use(routes);
 
 app.listen(port, () => console.log(`> Listening on port ${port}`));
