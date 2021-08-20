@@ -1,7 +1,11 @@
 import axios from "axios";
 import express, { Router, Request, Response } from "express";
 
-import { FavoriteDatabase, Favorite } from "./FavoriteDatabase";
+import { FavoriteDatabase, FavoriteGame } from "./FavoriteDatabase";
+
+import { CacheProvider } from "./CacheProvider";
+
+const cache = new CacheProvider();
 
 const api = axios.create();
 
@@ -39,6 +43,10 @@ type SteamAPIResponse = {
   };
 };
 
+type FavoriteGameWithDetails = FavoriteGame & {
+  gameDetails: any;
+};
+
 routes.get("/favorites", async (request: Request, response: Response) => {
   // Listar jogos favorito do usuário
 
@@ -52,7 +60,7 @@ routes.get("/favorites", async (request: Request, response: Response) => {
     });
   }
 
-  async function getGamesFromSteamAPI(gameId: number) {
+  async function getGameDetailsFromSteamAPI(gameId: number) {
     const { data } = await api.get(
       `http://store.steampowered.com/api/appdetails?appids=${gameId}`
     );
@@ -62,27 +70,60 @@ routes.get("/favorites", async (request: Request, response: Response) => {
     return gameDetails;
   }
 
-  async function mergeFavoriteGamesWithAppDetailsFromSteamAPI(
-    favoriteGames: Favorite[]
-  ) {
-    const favoriteGamesWithDetails = [];
+  function getGameDetailsFromCached(gameId: number) {
+    return cache.find<number, FavoriteGameWithDetails>(gameId);
+  }
+
+  function getFavoriteGamesFromDatabase() {
+    const favoriteGames = favoritesDatabase.findGamesByUserHash(userHash);
+
+    return favoriteGames;
+  }
+
+  async function getFavoriteGamesDetails() {
+    const favoriteGames = getFavoriteGamesFromDatabase();
+
+    const favoriteGamesWithDetails: FavoriteGameWithDetails[] = [];
 
     for (const favoriteGame of favoriteGames) {
-      const gameDetails = await getGamesFromSteamAPI(favoriteGame.game_id);
+      const gameIsCached = getGameDetailsFromCached(favoriteGame.game_id);
 
-      favoriteGamesWithDetails.push({
-        object: "FavoriteGame",
-        ...favoriteGame,
-        gameDetails,
-      });
+      if (gameIsCached) {
+        const gameDetails = gameIsCached;
+
+        const favoriteGameWithDetails = {
+          ...favoriteGame,
+          gameDetails,
+        };
+
+        console.log("> Game cached");
+        favoriteGamesWithDetails.push(favoriteGameWithDetails);
+      }
+
+      if (!gameIsCached) {
+        const gameDetails = await getGameDetailsFromSteamAPI(
+          favoriteGame.game_id
+        );
+
+        const favoriteGameWithDetails = {
+          ...favoriteGame,
+          gameDetails,
+        };
+
+        console.log("> Caching game...");
+        cache.add<number, FavoriteGameWithDetails>(
+          favoriteGame.game_id,
+          gameDetails
+        );
+
+        favoriteGamesWithDetails.push(favoriteGameWithDetails);
+      }
     }
 
     return favoriteGamesWithDetails;
   }
 
-  const favorites = await mergeFavoriteGamesWithAppDetailsFromSteamAPI(
-    favoritesDatabase.findGamesByUserHash(userHash)
-  );
+  const favorites = await getFavoriteGamesDetails();
 
   return response.json(favorites);
 });
@@ -132,7 +173,7 @@ routes.post("/favorites", (request: Request, response: Response) => {
   const { grade, game_id: gameId } = request.body;
   const userHash = request.headers["user-hash"].toString();
 
-  const favorite: Favorite = {
+  const favorite: FavoriteGame = {
     grade,
     game_id: gameId,
     user_hash: userHash,
