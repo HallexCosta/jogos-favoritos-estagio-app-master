@@ -1,4 +1,7 @@
+import axios from "axios";
 import express, { Router, Request, Response } from "express";
+
+const api = axios.create();
 
 const app = express();
 const port = 3333;
@@ -21,10 +24,29 @@ LIST APP DETAILS
 http://store.steampowered.com/api/appdetails?appids={APP_ID}
 */
 
+type SteamGetAppList = {
+  id: number;
+  name: string;
+};
+
+type SteamAPIResponse = {
+  applist: {
+    apps: SteamGetAppList[];
+  };
+};
+
 routes.get("/", async (request: Request, response: Response) => {
-  return response.json({
-    ok: true,
-  });
+  // Listar todos os jogos
+  // BODY: título do jogo
+  // Filtrar jogos usando título do jogo
+
+  const { data } = await api.get<SteamAPIResponse>(
+    "https://api.steampowered.com/ISteamApps/GetAppList/v2/"
+  );
+
+  const { apps: games } = data.applist;
+
+  return response.json(games);
 });
 
 app.use(routes);
