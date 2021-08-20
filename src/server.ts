@@ -1,13 +1,13 @@
 import axios from "axios";
 import express, { Router, Request, Response } from "express";
-import { Databases, Favorite } from "./databases";
+import { FavoriteDatabase, Favorite } from "./databases";
 
 const api = axios.create();
 
 const app = express();
 const port = 3333;
 
-const databases = new Databases();
+const favoritesDatabase = new FavoriteDatabase();
 
 app.use(express.json());
 
@@ -80,19 +80,21 @@ routes.post("/favorites", async (request: Request, response: Response) => {
   // Criar um favorito para o jogo
   // utilizar armazenamento em memória
 
-  const { grade, game_id } = request.body;
-  const user_hash = request.headers["user-hash"].toString();
+  const { grade, game_id: gameId } = request.body;
+  const userHash = request.headers["user-hash"].toString();
 
   const favorite: Favorite = {
     grade,
-    game_id,
-    user_hash,
+    gameId,
+    userHash,
   };
 
-  databases.favoritesDatabase.push(favorite);
+  favoritesDatabase.save(userHash, favorite);
 
   return response.status(201).json({
-    favorite,
+    grade,
+    game_id: gameId,
+    user_hash: userHash,
   });
 });
 
