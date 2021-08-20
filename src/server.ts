@@ -91,7 +91,7 @@ routes.post("/favorites", async (request: Request, response: Response) => {
 
   databases.favoritesDatabase.push(favorite);
 
-  return response.json({
+  return response.status(201).json({
     favorite,
   });
 });
