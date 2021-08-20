@@ -1,9 +1,11 @@
 export type Favorite = {
   grade: number;
-  game_id: number;
-  user_hash: string;
+  gameId: number;
+  userHash: string;
 };
 
-export class Databases {
-  public favoritesDatabase: Favorite[] = [];
+export class FavoriteDatabase extends Map {
+  public save(userHash: string, favorite: Favorite) {
+    this.set(userHash, favorite);
+  }
 }
