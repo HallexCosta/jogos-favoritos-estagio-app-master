@@ -23,7 +23,7 @@ Os requisitos para a construção da API foram descritos abaixo.
 - GET para obter os jogos favoritos, com os detalhes de cada jogo
 - Receber via header 'user-hash' para saber qual usuário é
 
-## Execeder as expectativas
+## Exceder as expectativas
 
 - Fazer cache dos dados obtidos da API externa, para só ir buscar uma única vez (cada dado)
 - Publicar online
