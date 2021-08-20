@@ -1,4 +1,5 @@
 import axios from "axios";
+import { createHash } from "crypto";
 import express, { Router, Request, Response } from "express";
 
 import { FavoriteDatabase, FavoriteGame } from "./FavoriteDatabase";
@@ -54,7 +55,11 @@ routes.get("/favorites", async (request: Request, response: Response) => {
 
   const userHasAddedFavorites = favoritesDatabase.has(userHash);
 
-  if (!userHasAddedFavorites) {
+  const favoriteGames = favoritesDatabase.findGamesByUserHash(userHash);
+
+  const favoriteGamesIsEmpty = favoriteGames.length <= 0;
+
+  if (!userHasAddedFavorites || favoriteGamesIsEmpty) {
     return response.status(400).json({
       message: "Este usuário não possui jogos adicionados aos favoritos",
     });
@@ -74,14 +79,14 @@ routes.get("/favorites", async (request: Request, response: Response) => {
     return cache.find<number, FavoriteGameWithDetails>(gameId);
   }
 
-  function getFavoriteGamesFromDatabase() {
+  function getFavoriteGamesFromDatabase(userHash: string) {
     const favoriteGames = favoritesDatabase.findGamesByUserHash(userHash);
 
     return favoriteGames;
   }
 
-  async function getFavoriteGamesDetails() {
-    const favoriteGames = getFavoriteGamesFromDatabase();
+  async function getFavoriteGamesDetails(userHash: string) {
+    const favoriteGames = getFavoriteGamesFromDatabase(userHash);
 
     const favoriteGamesWithDetails: FavoriteGameWithDetails[] = [];
 
@@ -123,7 +128,7 @@ routes.get("/favorites", async (request: Request, response: Response) => {
     return favoriteGamesWithDetails;
   }
 
-  const favorites = await getFavoriteGamesDetails();
+  const favorites = await getFavoriteGamesDetails(userHash);
 
   return response.json(favorites);
 });
@@ -170,22 +175,19 @@ routes.post("/favorites", (request: Request, response: Response) => {
   // Criar um favorito para o jogo
   // utilizar armazenamento em memória
 
-  const { grade, game_id: gameId } = request.body;
-  const userHash = request.headers["user-hash"].toString();
+  const { login, grade, game_id: gameId } = request.body;
+
+  const encryptedUserHash = createHash("md5").update(login).digest("hex");
 
   const favorite: FavoriteGame = {
     grade,
     game_id: gameId,
-    user_hash: userHash,
+    user_hash: encryptedUserHash,
   };
 
-  favoritesDatabase.save(userHash, favorite);
+  favoritesDatabase.save(favorite);
 
-  return response.status(201).json({
-    grade,
-    game_id: gameId,
-    user_hash: userHash,
-  });
+  return response.status(201).json(favorite);
 });
 
 routes.delete("/favorites/:game_id", (request: Request, response: Response) => {
@@ -196,6 +198,8 @@ routes.delete("/favorites/:game_id", (request: Request, response: Response) => {
   const userHash = request.headers["user-hash"].toString();
 
   const userHasAddedFavorites = favoritesDatabase.has(userHash);
+
+  const favoriteGames = favoritesDatabase.findGamesByUserHash(userHash);
 
   if (!userHasAddedFavorites) {
     return response.status(400).json({
