@@ -96,6 +96,79 @@ routes.post("/favorites", async (request: Request, response: Response) => {
   });
 });
 
+routes.delete(
+  "/favorites/:game_id",
+  async (request: Request, response: Response) => {
+    // Criar um favorito para o jogo
+    // utilizar armazenamento em memória
+
+    const gameId = Number(request.params.game_id);
+    const userHash = request.headers["user-hash"].toString();
+
+    function checkUserExists(favoriteUserHash: string, userHash: string) {
+      if (favoriteUserHash === userHash) {
+        return true;
+      }
+
+      console.log("> Usuário não foi encontrado");
+      return false;
+    }
+
+    const favoritesByUserHash = databases.favoritesDatabase.filter((favorite) =>
+      checkUserExists(favorite.user_hash, userHash)
+    );
+
+    if (!favoritesByUserHash) {
+      return response.status(400).json({
+        delete: false,
+        message: "Usuário não foi encontrado",
+      });
+    }
+
+    function checkForGameHasFavorited(
+      gameIdFromDatabase: number,
+      gameId: number
+    ) {
+      if (gameIdFromDatabase === gameId) {
+        return true;
+      }
+
+      console.log("> O jogo não foi favoritado por este usuário: ", userHash);
+      return false;
+    }
+
+    const favorite = favoritesByUserHash.find((favorite) =>
+      checkForGameHasFavorited(favorite.game_id, gameId)
+    );
+
+    if (!favorite) {
+      return response.status(400).json({
+        delete: false,
+        message: "O jogo não foi favoritado por este usuário",
+      });
+    }
+
+    function removeFavoriteGameFromDatabaseByGameId(gameId: number) {
+      const temp: Favorite[] = [];
+
+      for (const favorite of databases.favoritesDatabase) {
+        if (favorite.game_id !== gameId) {
+          temp.push(favorite);
+        }
+      }
+
+      databases.favoritesDatabase = temp;
+    }
+
+    removeFavoriteGameFromDatabaseByGameId(favorite.game_id);
+
+    return response.json({
+      delete: true,
+      favorite,
+    });
+  }
+);
+
 app.use(routes);
 
 app.listen(port, () => console.log(`> Listening on port ${port}`));
