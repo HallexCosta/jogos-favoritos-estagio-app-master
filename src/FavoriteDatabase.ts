@@ -5,15 +5,15 @@ export type FavoriteGame = {
 };
 
 export class FavoriteDatabase extends Map<string, FavoriteGame[]> {
-  public save(userHash: string, favorite: FavoriteGame) {
-    const favorites = this.get(userHash);
+  public save(favorite: FavoriteGame) {
+    const favorites = this.get(favorite.user_hash);
 
     if (favorites) {
-      this.set(userHash, [...favorites, favorite]);
+      this.set(favorite.user_hash, [...favorites, favorite]);
     }
 
     if (!favorites) {
-      this.set(userHash, [favorite]);
+      this.set(favorite.user_hash, [favorite]);
     }
   }
 
