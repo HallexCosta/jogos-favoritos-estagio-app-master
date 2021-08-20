@@ -38,6 +38,54 @@ type SteamAPIResponse = {
   };
 };
 
+routes.get("/favorites", async (request: Request, response: Response) => {
+  // Listar jogos favorito do usuário
+
+  const userHash = request.headers["user-hash"].toString();
+
+  const userHasAddedFavorites = favoritesDatabase.has(userHash);
+
+  if (!userHasAddedFavorites) {
+    return response.status(400).json({
+      message: "Este usuário não possui jogos adicionados aos favoritos",
+    });
+  }
+
+  async function getGamesFromSteamAPI(gameId: number) {
+    const { data } = await api.get(
+      `http://store.steampowered.com/api/appdetails?appids=${gameId}`
+    );
+
+    const { _, data: gameDetails } = data[gameId];
+
+    return gameDetails;
+  }
+
+  async function mergeFavoriteGamesWithAppDetailsFromSteamAPI(
+    favoriteGames: Favorite[]
+  ) {
+    const favoriteGamesWithDetails = [];
+
+    for (const favoriteGame of favoriteGames) {
+      const gameDetails = await getGamesFromSteamAPI(favoriteGame.game_id);
+
+      favoriteGamesWithDetails.push({
+        object: "FavoriteGame",
+        ...favoriteGame,
+        gameDetails,
+      });
+    }
+
+    return favoriteGamesWithDetails;
+  }
+
+  const favorites = await mergeFavoriteGamesWithAppDetailsFromSteamAPI(
+    favoritesDatabase.findGamesByUserHash(userHash)
+  );
+
+  return response.json(favorites);
+});
+
 routes.get("/", async (request: Request, response: Response) => {
   // Listar todos os jogos
   // BODY: título do jogo
@@ -76,7 +124,7 @@ routes.get("/:id", async (request: Request, response: Response) => {
   return response.json(gameDetails);
 });
 
-routes.post("/favorites", async (request: Request, response: Response) => {
+routes.post("/favorites", (request: Request, response: Response) => {
   // Criar um favorito para o jogo
   // utilizar armazenamento em memória
 
@@ -98,39 +146,36 @@ routes.post("/favorites", async (request: Request, response: Response) => {
   });
 });
 
-routes.delete(
-  "/favorites/:game_id",
-  async (request: Request, response: Response) => {
-    // Criar um favorito para o jogo
-    // utilizar armazenamento em memória
+routes.delete("/favorites/:game_id", (request: Request, response: Response) => {
+  // Criar um favorito para o jogo
+  // utilizar armazenamento em memória
 
-    const gameId = Number(request.params.game_id);
-    const userHash = request.headers["user-hash"].toString();
+  const gameId = Number(request.params.game_id);
+  const userHash = request.headers["user-hash"].toString();
 
-    const userHasAddedFavorites = favoritesDatabase.has(userHash);
+  const userHasAddedFavorites = favoritesDatabase.has(userHash);
 
-    if (!userHasAddedFavorites) {
-      return response.status(400).json({
-        message: "Este usuário não adicionou nenhum jogo aos favoritos",
-      });
-    }
-
-    const favorite = favoritesDatabase.findByGameId(userHash, gameId);
-
-    if (!favorite) {
-      return response.status(400).json({
-        message: "Este jogo já foi removido dos favoritos pelo usuário",
-      });
-    }
-
-    favoritesDatabase.deleteByGameId(userHash, gameId);
-
-    return response.json({
-      delete: true,
-      favorite,
+  if (!userHasAddedFavorites) {
+    return response.status(400).json({
+      message: "Este usuário não adicionou nenhum jogo aos favoritos",
     });
   }
-);
+
+  const favorite = favoritesDatabase.findByGameId(userHash, gameId);
+
+  if (!favorite) {
+    return response.status(400).json({
+      message: "Este jogo já foi removido dos favoritos pelo usuário",
+    });
+  }
+
+  favoritesDatabase.deleteByGameId(userHash, gameId);
+
+  return response.json({
+    delete: true,
+    favorite,
+  });
+});
 
 app.use(routes);
 
