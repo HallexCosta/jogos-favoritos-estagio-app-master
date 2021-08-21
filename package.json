@@ -5,8 +5,8 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "test": "ts-node --transpile-only -r dotenv/config __tests__/integration.test.ts",
     "start": "node -r dotenv/config dist/server.js",
+    "test": "ts-node --transpile-only -r dotenv/config __tests__/integration.test.ts",
     "test:watch": "tsnd --transpile-only --ignore-watch node_modules --respawn -r dotenv/config __tests__/integration.test.ts",
     "start:development": "tsnd --transpile-only --ignore-watch node_modules --respawn src/server.ts"
   },
