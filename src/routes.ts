@@ -49,7 +49,7 @@ routes.get("/favorites", async (request: Request, response: Response) => {
 
   const favoriteGames = favoritesDatabase.findGamesByUserHash(userHash);
 
-  const favoriteGamesIsEmpty = favoriteGames.length <= 0;
+  const favoriteGamesIsEmpty = favoriteGames?.length <= 0;
 
   if (!userHasAddedFavorites || favoriteGamesIsEmpty) {
     return response.status(400).json({
