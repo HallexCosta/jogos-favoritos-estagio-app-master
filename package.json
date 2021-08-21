@@ -6,6 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node -r dotenv/config dist/server.js",
+    "clean": "rimraf dist",
+    "compile": "yarn clean && yarn build",
     "test": "ts-node --transpile-only -r dotenv/config __tests__/integration.test.ts",
     "test:watch": "tsnd --transpile-only --ignore-watch node_modules --respawn -r dotenv/config __tests__/integration.test.ts",
     "start:development": "tsnd --transpile-only --ignore-watch node_modules --respawn src/server.ts"
@@ -25,7 +27,8 @@
     "axios": "^0.21.1",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
-    "node-cache": "^5.1.2"
+    "node-cache": "^5.1.2",
+    "rimraf": "^3.0.2"
   },
   "engines": {
     "node": "14.17.0"
