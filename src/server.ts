@@ -145,16 +145,16 @@ routes.get("/", async (request: Request, response: Response) => {
     "https://api.steampowered.com/ISteamApps/GetAppList/v2/"
   );
 
-  const { apps: games } = data.applist;
+  const { apps } = data.applist;
 
-  function searchGameByTitle(gameName: string, gameTitle: string) {
+  function searchGameByTitle(appName: string, gameTitle: string) {
     const regex = new RegExp(gameTitle, "gi");
 
-    return gameName.match(regex);
+    return regex.test(appName);
   }
 
-  const filteredGames = games.filter((game) =>
-    searchGameByTitle(game.name, title)
+  const filteredGames = apps.filter((app) =>
+    searchGameByTitle(app.name, title)
   );
 
   return response.json(filteredGames);
