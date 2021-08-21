@@ -49,8 +49,6 @@ type FavoriteGameWithDetails = FavoriteGame & {
 };
 
 routes.get("/favorites", async (request: Request, response: Response) => {
-  // Listar jogos favorito do usuário
-
   const userHash = request.headers["user-hash"].toString();
 
   const userHasAddedFavorites = favoritesDatabase.has(userHash);
@@ -136,6 +134,13 @@ routes.get("/favorites", async (request: Request, response: Response) => {
 routes.get("/", async (request: Request, response: Response) => {
   const title = request.query.title as string;
 
+  if (!title) {
+    return response.status(400).json({
+      error: 400,
+      message: "Must be inform title",
+    });
+  }
+
   const { data } = await api.get<SteamAPIResponse>(
     "https://api.steampowered.com/ISteamApps/GetAppList/v2/"
   );
@@ -168,9 +173,6 @@ routes.get("/:id", async (request: Request, response: Response) => {
 });
 
 routes.post("/favorites", (request: Request, response: Response) => {
-  // Criar um favorito para o jogo
-  // utilizar armazenamento em memória
-
   const { login, grade, game_id: gameId } = request.body;
 
   const encryptedUserHash = createHash("md5").update(login).digest("hex");
