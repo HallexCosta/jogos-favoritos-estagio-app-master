@@ -4,7 +4,7 @@
   "main": "dist/server.js",
   "license": "MIT",
   "scripts": {
-    "install:ci": "yarn install --fronzen-lockfile",
+    "install": "yarn install --fronzen-lockfile",
     "start": "tsnd --transpile-only --ignore-watch node_modules --respawn src/server.ts"
   },
   "devDependencies": {
@@ -18,5 +18,8 @@
     "axios": "^0.21.1",
     "express": "^4.17.1",
     "node-cache": "^5.1.2"
+  },
+  "engies": {
+    "node": "14.17.0"
   }
 }
