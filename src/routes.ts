@@ -1,5 +1,5 @@
-import { createHash } from "crypto";
 import axios from "axios";
+import { createHash } from "crypto";
 import { Router, Request, Response } from "express";
 
 import { FavoriteDatabase, FavoriteGame } from "./FavoriteDatabase";
@@ -93,7 +93,6 @@ routes.get("/favorites", async (request: Request, response: Response) => {
           gameDetails,
         };
 
-        console.log("> Game cached");
         favoriteGamesWithDetails.push(favoriteGameWithDetails);
       }
 
@@ -107,7 +106,6 @@ routes.get("/favorites", async (request: Request, response: Response) => {
           gameDetails,
         };
 
-        console.log("> Caching game...");
         cache.add<number, FavoriteGameWithDetails>(
           favoriteGame.game_id,
           gameDetails
