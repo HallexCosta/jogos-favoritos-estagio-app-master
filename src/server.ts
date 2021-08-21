@@ -134,10 +134,6 @@ routes.get("/favorites", async (request: Request, response: Response) => {
 });
 
 routes.get("/", async (request: Request, response: Response) => {
-  // Listar todos os jogos
-  // BODY: título do jogo
-  // Filtrar jogos usando título do jogo
-
   const title = request.query.title as string;
 
   const { data } = await api.get<SteamAPIResponse>(
@@ -191,15 +187,10 @@ routes.post("/favorites", (request: Request, response: Response) => {
 });
 
 routes.delete("/favorites/:game_id", (request: Request, response: Response) => {
-  // Criar um favorito para o jogo
-  // utilizar armazenamento em memória
-
   const gameId = Number(request.params.game_id);
   const userHash = request.headers["user-hash"].toString();
 
   const userHasAddedFavorites = favoritesDatabase.has(userHash);
-
-  const favoriteGames = favoritesDatabase.findGamesByUserHash(userHash);
 
   if (!userHasAddedFavorites) {
     return response.status(400).json({
