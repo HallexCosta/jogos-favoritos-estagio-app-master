@@ -11,7 +11,7 @@ const cache = new CacheProvider();
 const api = axios.create();
 
 const app = express();
-const port = 3333;
+const port = process.env.PORT || 3333;
 
 const favoritesDatabase = new FavoriteDatabase();
 
