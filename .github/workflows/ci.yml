@@ -2,9 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches: [heroku-deploy]
   workflow_dispatch:
 
 jobs:
