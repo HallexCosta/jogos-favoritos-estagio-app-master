@@ -167,6 +167,13 @@ routes.get("/:id", async (request: Request, response: Response) => {
 routes.post("/favorites", (request: Request, response: Response) => {
   const { login, rating, game_id: gameId } = request.body;
 
+  if (rating < 0 || rating > 5) {
+    return response.status(400).json({
+      error: 400,
+      message: "Enter a rating between 0 and 5",
+    });
+  }
+
   const encryptedUserHash = createHash("md5").update(login).digest("hex");
 
   const favorite: FavoriteGame = {
