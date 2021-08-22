@@ -8,6 +8,55 @@ const agent = supertest(app);
 (async () => {
   console.log("> Run test on routes /favorites");
 
+  // should be able to throw error if rate is less than zero and greater than five
+  {
+    agent
+      .post("/favorites")
+      .send({
+        rating: 10,
+        game_id: 495160,
+        login: "hallex",
+      })
+      .expect(400)
+      .end((error) => {
+        if (error) throw error;
+
+        console.log(
+          "should be able to throw error if rate is less than zero and greater than five",
+          true
+        );
+      });
+  }
+
+  // user must be able to rate a game from zero to five.
+  {
+    const body = {
+      rating: 5,
+      game_id: 495160,
+      login: "hallex",
+    };
+
+    agent
+      .post("/favorites")
+      .send(body)
+      .then(({ body: favoriteGame }) => {
+        assert(favoriteGame.game_id === 495160);
+        assert(favoriteGame.grade === 10);
+        assert(favoriteGame.user_hash === "e91674638e85ab083536a6fb2b16702c");
+      });
+
+    agent
+      .post("/favorites")
+      .send(body)
+      .then(({ body: favoriteGame }) => {
+        assert(favoriteGame.game_id === 495160);
+        assert(favoriteGame.grade === 10);
+        assert(favoriteGame.user_hash === "e91674638e85ab083536a6fb2b16702c");
+      });
+
+    console.log("user must be able to rate a game from zero to five", true);
+  }
+
   // should be able to add in memory new favorite game by user hash
   {
     agent
