@@ -165,12 +165,12 @@ routes.get("/:id", async (request: Request, response: Response) => {
 });
 
 routes.post("/favorites", (request: Request, response: Response) => {
-  const { login, grade, game_id: gameId } = request.body;
+  const { login, rating, game_id: gameId } = request.body;
 
   const encryptedUserHash = createHash("md5").update(login).digest("hex");
 
   const favorite: FavoriteGame = {
-    grade,
+    rating,
     game_id: gameId,
     user_hash: encryptedUserHash,
   };
