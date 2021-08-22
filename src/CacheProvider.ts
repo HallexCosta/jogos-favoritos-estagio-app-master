@@ -7,7 +7,7 @@ export class CacheProvider {
     this.cache.set(key.toString(), value, ttl);
   }
 
-  public find<K, T>(key: K): T {
+  public find<T>(key: string | number): T {
     return this.cache.get<T>(key.toString());
   }
 }
