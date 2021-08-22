@@ -1,5 +1,5 @@
 export type FavoriteGame = {
-  grade: number;
+  rating: number;
   game_id: number;
   user_hash: string;
 };
