@@ -1,10 +1,11 @@
 # Projeto Jogos Favoritos - Estágio
 
-Projeto realizando durante o processo seletivo na empresa 
-<a href="https://appmasters.io/">App Master</a>
-Objetivo do processo seletivo é criar uma API com a API da Steam.
+Projeto realizado durante o processo seletivo na empresa [App Master](https://appmasters.io).
+O desafio do processo seletivo foi desenvolver uma API utilizando a API da Steam, para que possamos listar os jogos
+e que um usuário da nossa API possa favoritar algum jogo e ver os detalhes do jogo.
 Os requisitos para a construção da API foram descritos abaixo.
 
+Clique [aqui](https://jogos-favoritos-estagio.herokuapp.com) para testar a API.
 
 ## API'S Externa
 
@@ -21,7 +22,7 @@ Os requisitos para a construção da API foram descritos abaixo.
 - POST para incluir novo favorito, incluindo a nota
 - DEL para remover um favorito
 - GET para obter os jogos favoritos, com os detalhes de cada jogo
-- Receber via header 'user-hash' para saber qual usuário é
+- Receber via header um "user-hash" para saber qual usuário é
 
 ## Exceder as expectativas
 
@@ -37,10 +38,10 @@ Listar Jogos
 Query
 
 ```bash
-# sem filto
+# sem filto (retorna um erro 404)
 http://localhost:3333/
 
-# com filtro
+# com filtro (retorna os dados do jogo que tenha o titulo igual ou similar passado pelo parâmetro de query)
 http://localhost:3333/?title=naruto storm 4
 ```
 
@@ -88,22 +89,23 @@ Headers
 "user-hash": "00000000000000000000000000000000"
 ```
 
-## Alerta ⚠️
+## Atenção 📝
 
-Gostaria de lembrar que o `user-hash` é obtido ao favoritar algum jogo.  
-A rota **POST "/favorites"** criptografa seu login e gera um hash na arquitetura baseada em MD5.
+Ressalvo que o `user-hash` é determinado com base no login, sendo assim, criptografando-o e retornando ao favoritar algum jogo. 😄
 
 ## Biblioteca que manipula o uso da API da Steam (Não testei, mais é uma outra alternativa)
 
 https://github.com/xDimGG/node-steamapi
 
 ## Perguntas?
-1) A API utiliza algum banco de dados?  
-R: não. Foi permitido o uso de banco de dados, porém, foi sugerido que usássemos o armazenamento em memória e em cache.
 
-2) Porque `node-cache` e não `redis`?  
-R: Porque sim. Brincadeira... `node-cache` tem uma implementação mais simples, mais acredito que `redis` seja melhor para uma quantidade massiva de dados. 😄
+1. A API utiliza algum banco de dados?  
+   R: não. Foi permitido o uso de banco de dados, porém, foi sugerido que usássemos o armazenamento em memória e em cache. 😄
+
+2. Porque `node-cache` e não `redis`?  
+   R: Porque sim. Brincadeira... `node-cache` tem uma implementação mais simples, mais acredito que `redis` seja melhor para uma quantidade massiva de dados. 😄
 
 ## Conclusão
 
-Sendo esse meu primeiro processo seletivo com teste prático eu particularmente gostei do desafio proposto pela empresa <a href="https://appmasters.io/">App Master</a> pude aprender que alguns projetos não precisam começar com uma arquitetura high-end, sendo assim entregando o projeto dentro do prazo e, caso aja necessidade futuramente implantar uma arquitetura mais robusta.
+Sendo esse meu primeiro processo seletivo com teste prático eu particularmente gostei do desafio proposto pela empresa <a href="https://appmasters.io/">App Master</a> pude aprender que alguns projetos não precisam começar com uma arquitetura high-end, sendo assim entregando o projeto dentro de um prazo e, caso aja necessidade futuramente implantar uma arquitetura mais robusta refatorando o codígo. 😄
+
