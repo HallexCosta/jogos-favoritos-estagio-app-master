@@ -50,6 +50,13 @@ type FavoriteGameWithDetails = FavoriteGame & {
 routes.get("/favorites", async (request: Request, response: Response) => {
   const userHash = request.headers["user-hash"].toString();
 
+  if (!userHash) {
+    return response.status(400).json({
+      error: 400,
+      message: 'Informe um "user-hash" valido',
+    });
+  }
+
   const userHasAddedFavorites = favoritesDatabase.has(userHash);
 
   const favoriteGames = favoritesDatabase.findGamesByUserHash(userHash);
@@ -246,6 +253,13 @@ routes.post("/favorites", (request: Request, response: Response) => {
 routes.delete("/favorites/:game_id", (request: Request, response: Response) => {
   const gameId = Number(request.params.game_id);
   const userHash = request.headers["user-hash"].toString();
+
+  if (!userHash) {
+    return response.status(400).json({
+      error: 400,
+      message: 'Informe um "user-hash" valido',
+    });
+  }
 
   const userHasAddedFavorites = favoritesDatabase.has(userHash);
 
