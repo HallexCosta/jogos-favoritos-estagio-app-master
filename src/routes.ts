@@ -28,9 +28,13 @@ http://store.steampowered.com/api/appdetails?appids={APP_ID}
 */
 
 type SteamGetAppList = {
-  id: number;
+  appid: number;
   name: string;
 };
+
+type GameDetails = any;
+
+type SteamGetAppListWithDetails = SteamGetAppList & { gameDetails: any };
 
 type SteamAPIResponse = {
   applist: {
@@ -39,7 +43,7 @@ type SteamAPIResponse = {
 };
 
 type FavoriteGameWithDetails = FavoriteGame & {
-  gameDetails: any;
+  gameDetails: GameDetails;
 };
 
 routes.get("/favorites", async (request: Request, response: Response) => {
@@ -68,7 +72,7 @@ routes.get("/favorites", async (request: Request, response: Response) => {
   }
 
   function getGameDetailsFromCached(gameId: number) {
-    return cache.find<number, FavoriteGameWithDetails>(gameId);
+    return cache.find<FavoriteGameWithDetails>(gameId);
   }
 
   function getFavoriteGamesFromDatabase(userHash: string) {
@@ -133,21 +137,45 @@ routes.get("/", async (request: Request, response: Response) => {
     });
   }
 
-  const { data } = await api.get<SteamAPIResponse>(
-    "https://api.steampowered.com/ISteamApps/GetAppList/v2/"
-  );
-
-  const { apps } = data.applist;
-
   function searchGameByTitle(appName: string, gameTitle: string) {
     const regex = new RegExp(gameTitle, "gi");
 
     return regex.test(appName);
   }
 
+  const gamesAlreadyCached = cache.find<SteamGetAppList[]>("steam-apps");
+
+  if (gamesAlreadyCached) {
+    console.log("Cached");
+    const filteredGamesAlreadyCached = gamesAlreadyCached.filter(({ name }) =>
+      searchGameByTitle(name, title)
+    );
+
+    if (filteredGamesAlreadyCached.length !== 0) {
+      console.log("filtered cache");
+      return response.json(filteredGamesAlreadyCached);
+    }
+  }
+
+  const { data } = await api.get<SteamAPIResponse>(
+    "https://api.steampowered.com/ISteamApps/GetAppList/v2/"
+  );
+
+  const { apps } = data.applist;
+
   const filteredGames = apps.filter((app) =>
     searchGameByTitle(app.name, title)
   );
+
+  if (gamesAlreadyCached) {
+    console.log("re-caching data with new games");
+    cache.add("steam-apps", [...gamesAlreadyCached, ...filteredGames]);
+  }
+
+  if (!gamesAlreadyCached) {
+    console.log("caching pure data from api");
+    cache.add("steam-apps", filteredGames);
+  }
 
   return response.json(filteredGames);
 });
@@ -170,7 +198,7 @@ routes.post("/favorites", (request: Request, response: Response) => {
   if (rating < 0 || rating > 5) {
     return response.status(400).json({
       error: 400,
-      message: "Enter a rating between 0 and 5",
+      message: "Escolha uma nota entre 0 e 5",
     });
   }
 
