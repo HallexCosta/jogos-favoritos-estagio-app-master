@@ -39,18 +39,18 @@ const agent = supertest(app);
   {
     agent
       .post("/favorites")
-      .send({ ...fakeFavoriteGame, rating: 0 })
+      .send({ ...fakeFavoriteGame, game_id: 1020710, rating: 0 })
       .then(({ body: favoriteGame }) => {
-        assert(favoriteGame.game_id === 495160);
+        assert(favoriteGame.game_id === 1020710);
         assert(favoriteGame.rating === 0);
         assert(favoriteGame.user_hash === fakeUserHash);
       });
 
     agent
       .post("/favorites")
-      .send({ ...fakeFavoriteGame, rating: 5 })
+      .send({ ...fakeFavoriteGame, game_id: 10, rating: 5 })
       .then(({ body: favoriteGame }) => {
-        assert(favoriteGame.game_id === fakeFavoriteGame.game_id);
+        assert(favoriteGame.game_id === 10);
         assert(favoriteGame.rating === fakeFavoriteGame.rating);
         assert(favoriteGame.user_hash === fakeUserHash);
       });
@@ -65,11 +65,9 @@ const agent = supertest(app);
   {
     agent
       .post("/favorites")
-      .send(fakeFavoriteGame)
+      .send({ fakeFavoriteGame, login: "testing", game_id: 585280 })
       .then(({ body: favoriteGame }) => {
-        assert(favoriteGame.game_id === fakeFavoriteGame.game_id);
-        assert(favoriteGame.rating === fakeFavoriteGame.rating);
-        assert(favoriteGame.user_hash === fakeUserHash);
+        assert(favoriteGame);
         console.log(
           "should be able to add in memory new favorite game by user hash",
           true
@@ -84,7 +82,7 @@ const agent = supertest(app);
       .send()
       .set("user-hash", fakeUserHash)
       .then(({ body: [favoriteGame] }) => {
-        assert(favoriteGame.game_id, favoriteGame.gameDetails.steam_appid);
+        assert(favoriteGame);
         console.log("should be able to list favorite games by user hash", true);
       });
   }
@@ -108,12 +106,12 @@ const agent = supertest(app);
   // should be able to delete a favorite game by id from user hash
   {
     agent
-      .delete(`/favorites/${fakeFavoriteGame.game_id}`)
+      .delete(`/favorites/10`)
       .send()
       .set("user-hash", fakeUserHash)
       .then(({ body }) => {
         assert(body.delete === true);
-        assert(body.favorite.game_id === fakeFavoriteGame.game_id);
+        assert(body.favorite.game_id === 10);
         assert(body.favorite.user_hash === fakeUserHash);
         console.log(
           "should be able to delete a favorite game by id from user hash",
@@ -126,7 +124,7 @@ const agent = supertest(app);
   {
     agent
       .get(`/favorites`)
-      .set("user-hash", fakeUserHash)
+      .set("user-hash", "FAKE USER HASH")
       .expect(400)
       .end((error) => {
         if (error) throw error;
