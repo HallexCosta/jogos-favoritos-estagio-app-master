@@ -8,6 +8,7 @@ import { CacheProvider } from "./CacheProvider";
 const routes = Router();
 
 const cache = new CacheProvider();
+cache.add("steam-apps", []);
 
 const api = axios.create();
 
@@ -143,18 +144,26 @@ routes.get("/", async (request: Request, response: Response) => {
     return regex.test(appName);
   }
 
-  const gamesAlreadyCached = cache.find<SteamGetAppList[]>("steam-apps");
+  function filterGamesAlreadyCached(name: string, title: string) {
+    return searchGameByTitle(name, title);
+  }
 
-  if (gamesAlreadyCached) {
-    console.log("Cached");
-    const filteredGamesAlreadyCached = gamesAlreadyCached.filter(({ name }) =>
-      searchGameByTitle(name, title)
-    );
+  function getGamesFromCache() {
+    const gamesFromCache = cache.find<SteamGetAppList[]>("steam-apps");
 
-    if (filteredGamesAlreadyCached.length !== 0) {
-      console.log("filtered cache");
-      return response.json(filteredGamesAlreadyCached);
+    if (gamesFromCache) {
+      const filteredGamesAlreadyCached = gamesFromCache.filter((game) =>
+        filterGamesAlreadyCached(game.name, title)
+      );
+
+      return filteredGamesAlreadyCached;
     }
+  }
+
+  const gamesAlreadyCached = getGamesFromCache();
+
+  if (gamesAlreadyCached.length > 0) {
+    return response.json(gamesAlreadyCached);
   }
 
   const { data } = await api.get<SteamAPIResponse>(
