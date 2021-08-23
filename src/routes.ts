@@ -219,6 +219,24 @@ routes.post("/favorites", (request: Request, response: Response) => {
     user_hash: encryptedUserHash,
   };
 
+  const userAlreadyExists = favoritesDatabase.findGamesByUserHash(
+    favorite.user_hash
+  );
+
+  if (userAlreadyExists) {
+    const favoriteGameAlreadyAddedToUser = favoritesDatabase.findByGameId(
+      favorite.user_hash,
+      favorite.game_id
+    );
+
+    if (favoriteGameAlreadyAddedToUser) {
+      return response.status(400).json({
+        error: 400,
+        message: "Ops... Não é possivel adiconar o mesmo jogo duas vezes",
+      });
+    }
+  }
+
   favoritesDatabase.save(favorite);
 
   return response.status(201).json(favorite);
