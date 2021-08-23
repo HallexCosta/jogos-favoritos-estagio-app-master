@@ -58,6 +58,7 @@ routes.get("/favorites", async (request: Request, response: Response) => {
 
   if (!userHasAddedFavorites || favoriteGamesIsEmpty) {
     return response.status(400).json({
+      error: 400,
       message: "Este usuário não possui jogos adicionados aos favoritos",
     });
   }
