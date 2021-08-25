@@ -39,7 +39,9 @@ type SteamGetAppListWithDetails = SteamGetAppList & { gameDetails: any };
 
 type SteamAPIResponse = {
   applist: {
-    apps: SteamGetAppList[];
+    apps: {
+      app: SteamGetAppList[];
+    };
   };
 };
 
@@ -136,36 +138,11 @@ routes.get("/favorites", async (request: Request, response: Response) => {
   return response.json(favorites);
 });
 
-routes.get("/", async (request: Request, response: Response) => {
-  const title = request.query.title as string;
-
-  if (!title) {
-    return response.status(400).json({
-      error: 400,
-      message: "Must be inform title",
-    });
-  }
-
-  function searchGameByTitle(appName: string, gameTitle: string) {
-    const regex = new RegExp(gameTitle, "gi");
-
-    return regex.test(appName);
-  }
-
-  function filterGamesAlreadyCached(name: string, title: string) {
-    return searchGameByTitle(name, title);
-  }
-
+routes.get("/", async (_, response: Response) => {
   function getGamesFromCache() {
     const gamesFromCache = cache.find<SteamGetAppList[]>("steam-apps");
 
-    if (gamesFromCache) {
-      const filteredGamesAlreadyCached = gamesFromCache.filter((game) =>
-        filterGamesAlreadyCached(game.name, title)
-      );
-
-      return filteredGamesAlreadyCached;
-    }
+    return gamesFromCache;
   }
 
   const gamesAlreadyCached = getGamesFromCache();
@@ -175,26 +152,14 @@ routes.get("/", async (request: Request, response: Response) => {
   }
 
   const { data } = await api.get<SteamAPIResponse>(
-    "https://api.steampowered.com/ISteamApps/GetAppList/v2/"
+    "https://simple-api-selection.herokuapp.com/list-games/?title=race"
   );
 
-  const { apps } = data.applist;
+  const { app: games } = data.applist.apps;
 
-  const filteredGames = apps.filter((app) =>
-    searchGameByTitle(app.name, title)
-  );
+  cache.add("steam-apps", games);
 
-  if (gamesAlreadyCached) {
-    console.log("re-caching data with new games");
-    cache.add("steam-apps", [...gamesAlreadyCached, ...filteredGames]);
-  }
-
-  if (!gamesAlreadyCached) {
-    console.log("caching pure data from api");
-    cache.add("steam-apps", filteredGames);
-  }
-
-  return response.json(filteredGames);
+  return response.json(games);
 });
 
 routes.get("/:id", async (request: Request, response: Response) => {
