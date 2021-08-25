@@ -8,24 +8,14 @@ const agent = supertest(app);
 (async () => {
   console.log("> Run test on routes /");
 
-  // should be able throw error if not inform title
-  {
-    agent
-      .get("/")
-      .expect(400)
-      .end(function (error) {
-        if (error) throw error;
-      });
-  }
-
   // should be able list all apps from steam api
   {
     agent
-      .get("/?title=naruto storm 4")
+      .get("/")
       .send()
-      .then(({ body: appDetais }) => {
-        assert(appDetais.length === 2);
-        assert(appDetais[0].appid === 495160);
+      .then(({ body: apps }) => {
+        assert(apps[0].hasOwnProperty("appid"));
+        assert(apps[0].hasOwnProperty("name"));
         console.log("should be able list all apps from steam api", true);
       });
   }
