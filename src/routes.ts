@@ -155,7 +155,7 @@ routes.get("/", async (_, response: Response) => {
     "https://simple-api-selection.herokuapp.com/list-games/?title=race"
   );
 
-  const { app: games } = data.applist.apps;
+  const games = data.applist.apps.app.slice(0, 300);
 
   cache.add("steam-apps", games);
 
