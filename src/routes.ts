@@ -195,15 +195,9 @@ routes.delete("/favorites/:game_id", (request: Request, response: Response) => {
 
   const userHash = request.headers["user-hash"] as string;
 
-  if (!userHash) {
-    return response.status(409).json({
-      message: 'Informe um "user-hash"',
-    });
-  }
-
   const userHasAddedFavorites = favoritesDatabase.has(userHash);
 
-  if (!userHasAddedFavorites) {
+  if (!userHash || !userHasAddedFavorites) {
     return response.status(409).json({
       message: "Este jogo já foi removido dos favoritos pelo usuário",
     });
