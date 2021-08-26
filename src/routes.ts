@@ -97,7 +97,7 @@ async function getFavoriteGamesDetails(userHash: string) {
   return favoriteGamesWithDetails;
 }
 
-routes.get("/favorites", async (request: Request, response: Response) => {
+routes.get("/favorite", async (request: Request, response: Response) => {
   const userHash = request.headers["user-hash"] as string;
 
   const favoriteGames = favoritesDatabase.findGamesByUserHash(userHash);
@@ -141,13 +141,13 @@ routes.get("/:id", async (request: Request, response: Response) => {
   return response.json(gameDetails);
 });
 
-routes.post("/favorites", (request: Request, response: Response) => {
+routes.post("/favorite", (request: Request, response: Response) => {
   const userHash = request.headers["user-hash"] as string;
 
   const { rating, game_id: gameId } = request.body;
 
   if (!userHash) {
-    return response.status(409).json({
+    return response.status(403).json({
       message: 'Informe um "user-hash"',
     });
   }
@@ -175,7 +175,7 @@ routes.post("/favorites", (request: Request, response: Response) => {
     );
 
     if (favoriteGameAlreadyAddedToUser) {
-      return response.status(403).json({
+      return response.status(409).json({
         message: "Ops... Não é possivel adiconar o mesmo jogo duas vezes",
       });
     }
@@ -186,7 +186,7 @@ routes.post("/favorites", (request: Request, response: Response) => {
   return response.status(201).json(favorite);
 });
 
-routes.delete("/favorites/:game_id", (request: Request, response: Response) => {
+routes.delete("/favorite/:game_id", (request: Request, response: Response) => {
   const gameId = Number(request.params.game_id);
 
   const userHash = request.headers["user-hash"] as string;
