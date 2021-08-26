@@ -36,8 +36,7 @@ routes.get("/favorites", async (request: Request, response: Response) => {
   const userHash = request.headers["user-hash"] as string;
 
   if (!userHash) {
-    return response.status(400).json({
-      error: 400,
+    return response.status(403).json({
       message: 'Informe um "user-hash"',
     });
   }
