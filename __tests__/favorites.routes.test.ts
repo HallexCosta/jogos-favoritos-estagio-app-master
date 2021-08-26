@@ -11,15 +11,34 @@ const agent = supertest(app);
   const fakeFavoriteGame = {
     rating: 5,
     game_id: 495160,
-    login: "hallex",
   };
 
   const fakeUserHash = "e91674638e85ab083536a6fb2b16702c";
+
+  // should be able to throw an error if try favorited a game without "user-hash" sending by header
+  {
+    agent
+      .post("/favorites")
+      .send({
+        ...fakeFavoriteGame,
+        rating: 10,
+      })
+      .expect(400)
+      .end((error) => {
+        if (error) throw error;
+
+        console.log(
+          'should be able to throw an error if try favorited a game without "user-hash" sending by header',
+          true
+        );
+      });
+  }
 
   // should be able to throw error if rate is less than zero and greater than five
   {
     agent
       .post("/favorites")
+      .set("user-hash", fakeUserHash)
       .send({
         ...fakeFavoriteGame,
         rating: 10,
@@ -39,6 +58,7 @@ const agent = supertest(app);
   {
     agent
       .post("/favorites")
+      .set("user-hash", fakeUserHash)
       .send({ ...fakeFavoriteGame, game_id: 1020710, rating: 0 })
       .then(({ body: favoriteGame }) => {
         assert(favoriteGame.game_id === 1020710);
@@ -48,6 +68,7 @@ const agent = supertest(app);
 
     agent
       .post("/favorites")
+      .set("user-hash", fakeUserHash)
       .send({ ...fakeFavoriteGame, game_id: 10, rating: 5 })
       .then(({ body: favoriteGame }) => {
         assert(favoriteGame.game_id === 10);
@@ -87,17 +108,17 @@ const agent = supertest(app);
       });
   }
 
-  // should be able throw error if trying to disfavor a game not added by user hash
+  // should be able not throw error if trying to disfavor a game not added by user hash
   {
     agent
       .delete(`/favorites/${fakeFavoriteGame.game_id}`)
       .set("user-hash", "FAKE USER HASH")
-      .expect(400)
+      .expect(409)
       .end((error) => {
         if (error) throw error;
 
         console.log(
-          "should be able throw error if trying to disfavor a game not added by user hash",
+          "should be able not throw error if trying to disfavor a game not added by user hash",
           true
         );
       });
@@ -109,10 +130,10 @@ const agent = supertest(app);
       .delete(`/favorites/10`)
       .send()
       .set("user-hash", fakeUserHash)
-      .then(({ body }) => {
-        assert(body.delete === true);
-        assert(body.favorite.game_id === 10);
-        assert(body.favorite.user_hash === fakeUserHash);
+      .expect(200)
+      .end((error) => {
+        if (error) throw error;
+
         console.log(
           "should be able to delete a favorite game by id from user hash",
           true
@@ -120,17 +141,17 @@ const agent = supertest(app);
       });
   }
 
-  // should be able to throw error if user hash not have none game added
+  // should be able to return 204 and empty array if "user-hash" not have none game added
   {
     agent
       .get(`/favorites`)
-      .set("user-hash", "FAKE USER HASH")
-      .expect(400)
+      .set("user-hash", fakeUserHash)
+      .expect(200)
       .end((error) => {
         if (error) throw error;
 
         console.log(
-          "should be able to throw error if user hash not have none game added",
+          'should be able to return 204 and empty array if "user-hash" not have none game added',
           true
         );
       });
