@@ -32,6 +32,71 @@ type FavoriteGameWithDetails = FavoriteGame & {
   gameDetails: GameDetails;
 };
 
+function getDataFromCache<T>(key: string | number) {
+  const gamesFromCache = cache.find<T>(key);
+
+  return gamesFromCache;
+}
+
+async function getGameDetailsFromSteamAPI(gameId: number) {
+  const { data } = await api.get(
+    `http://store.steampowered.com/api/appdetails?appids=${gameId}`
+  );
+
+  const { _, data: gameDetails } = data[gameId];
+
+  return gameDetails;
+}
+
+function getFavoriteGamesFromDatabase(userHash: string) {
+  const favoriteGames = favoritesDatabase.findGamesByUserHash(userHash);
+
+  return favoriteGames;
+}
+
+async function getFavoriteGamesDetails(userHash: string) {
+  const favoriteGames = getFavoriteGamesFromDatabase(userHash);
+
+  const favoriteGamesWithDetails: FavoriteGameWithDetails[] = [];
+
+  for (const favoriteGame of favoriteGames) {
+    const gameIsCached = getDataFromCache<FavoriteGameWithDetails>(
+      favoriteGame.game_id
+    );
+
+    if (gameIsCached) {
+      const gameDetails = gameIsCached;
+
+      const favoriteGameWithDetails = {
+        ...favoriteGame,
+        gameDetails,
+      };
+
+      favoriteGamesWithDetails.push(favoriteGameWithDetails);
+    }
+
+    if (!gameIsCached) {
+      const gameDetails = await getGameDetailsFromSteamAPI(
+        favoriteGame.game_id
+      );
+
+      const favoriteGameWithDetails = {
+        ...favoriteGame,
+        gameDetails,
+      };
+
+      cache.add<number, FavoriteGameWithDetails>(
+        favoriteGame.game_id,
+        gameDetails
+      );
+
+      favoriteGamesWithDetails.push(favoriteGameWithDetails);
+    }
+  }
+
+  return favoriteGamesWithDetails;
+}
+
 routes.get("/favorites", async (request: Request, response: Response) => {
   const userHash = request.headers["user-hash"] as string;
 
@@ -41,80 +106,13 @@ routes.get("/favorites", async (request: Request, response: Response) => {
     return response.status(204).send();
   }
 
-  async function getGameDetailsFromSteamAPI(gameId: number) {
-    const { data } = await api.get(
-      `http://store.steampowered.com/api/appdetails?appids=${gameId}`
-    );
-
-    const { _, data: gameDetails } = data[gameId];
-
-    return gameDetails;
-  }
-
-  function getGameDetailsFromCached(gameId: number) {
-    return cache.find<FavoriteGameWithDetails>(gameId);
-  }
-
-  function getFavoriteGamesFromDatabase(userHash: string) {
-    const favoriteGames = favoritesDatabase.findGamesByUserHash(userHash);
-
-    return favoriteGames;
-  }
-
-  async function getFavoriteGamesDetails(userHash: string) {
-    const favoriteGames = getFavoriteGamesFromDatabase(userHash);
-
-    const favoriteGamesWithDetails: FavoriteGameWithDetails[] = [];
-
-    for (const favoriteGame of favoriteGames) {
-      const gameIsCached = getGameDetailsFromCached(favoriteGame.game_id);
-
-      if (gameIsCached) {
-        const gameDetails = gameIsCached;
-
-        const favoriteGameWithDetails = {
-          ...favoriteGame,
-          gameDetails,
-        };
-
-        favoriteGamesWithDetails.push(favoriteGameWithDetails);
-      }
-
-      if (!gameIsCached) {
-        const gameDetails = await getGameDetailsFromSteamAPI(
-          favoriteGame.game_id
-        );
-
-        const favoriteGameWithDetails = {
-          ...favoriteGame,
-          gameDetails,
-        };
-
-        cache.add<number, FavoriteGameWithDetails>(
-          favoriteGame.game_id,
-          gameDetails
-        );
-
-        favoriteGamesWithDetails.push(favoriteGameWithDetails);
-      }
-    }
-
-    return favoriteGamesWithDetails;
-  }
-
   const favorites = await getFavoriteGamesDetails(userHash);
 
   return response.json(favorites);
 });
 
-routes.get("/", async (request: Request, response: Response) => {
-  function getGamesFromCache() {
-    const gamesFromCache = cache.find<SteamGetAppList[]>("steam-apps");
-
-    return gamesFromCache;
-  }
-
-  const gamesAlreadyCached = getGamesFromCache();
+routes.get("/", async (_, response: Response) => {
+  const gamesAlreadyCached = getDataFromCache<SteamGetAppList[]>("steam-apps");
 
   if (gamesAlreadyCached.length > 0) {
     return response.status(200).json(gamesAlreadyCached);
@@ -149,13 +147,13 @@ routes.post("/favorites", (request: Request, response: Response) => {
   const { rating, game_id: gameId } = request.body;
 
   if (!userHash) {
-    return response.status(403).json({
+    return response.status(409).json({
       message: 'Informe um "user-hash"',
     });
   }
 
   if (rating < 0 || rating > 5) {
-    return response.status(403).json({
+    return response.status(409).json({
       message: "Escolha uma nota entre 0 e 5",
     });
   }
