@@ -149,14 +149,13 @@ routes.post("/favorites", (request: Request, response: Response) => {
   const { rating, game_id: gameId } = request.body;
 
   if (!userHash) {
-    return response.status(400).json({
+    return response.status(403).json({
       message: 'Informe um "user-hash"',
     });
   }
 
   if (rating < 0 || rating > 5) {
-    return response.status(400).json({
-      error: 400,
+    return response.status(403).json({
       message: "Escolha uma nota entre 0 e 5",
     });
   }
@@ -178,8 +177,7 @@ routes.post("/favorites", (request: Request, response: Response) => {
     );
 
     if (favoriteGameAlreadyAddedToUser) {
-      return response.status(400).json({
-        error: 400,
+      return response.status(403).json({
         message: "Ops... Não é possivel adiconar o mesmo jogo duas vezes",
       });
     }
