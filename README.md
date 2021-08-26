@@ -32,16 +32,12 @@ Os requisitos para a construção da API foram descritos abaixo.
 
 Listar Jogos
 
-- **GET: /?title=** - Lista todos os jogos da Steam (Possui um filtro por titulo)
+- **GET: /** - Lista os jogos da Steam 
 
 Query
 
 ```bash
-# sem filto
 http://localhost:3333/
-
-# com filtro
-http://localhost:3333/?title=naruto storm 4
 ```
 
 - **GET: /:game_id** - Lista um jogo específico buscando pelo ID
@@ -54,19 +50,19 @@ http://localhost:3333/706220
 
 Listar Favoritos
 
-- **POST: /favorites** - Lista um jogo específico buscando pelo ID
+- **POST: /favorites** - Lista um jogo específico buscando pelo ID (enviar "user-hash" via header)  
+A nota para um jogo favorito deve ser entre 0 e 5
 
 Body
 
 ```json
 {
   "rating": 5,
-  "game_id": 706220,
-  "login": "hallex"
+  "game_id": 706220
 }
 ```
 
-- **GET: /favorites** - Lista todos os jogos favoritado por um usuário
+- **GET: /favorites** - Lista todos os jogos favoritado por um usuário (enviar "user-hash" via header)
 
 Headers
 
@@ -74,7 +70,7 @@ Headers
 "user-hash": "00000000000000000000000000000000"
 ```
 
-- **DELETE: /favorites/:game_id** - Desfavorita o jogo de algum usuário
+- **DELETE: /favorites/:game_id** - Desfavorita o jogo de algum usuário (enviar "user-hash" via header)
 
 Params
 
@@ -87,11 +83,6 @@ Headers
 ```json
 "user-hash": "00000000000000000000000000000000"
 ```
-
-## Alerta ⚠️
-
-Gostaria de lembrar que o `user-hash` é obtido ao favoritar algum jogo.  
-A rota **POST "/favorites"** criptografa seu login e gera um hash na arquitetura baseada em MD5.
 
 ## Biblioteca que manipula o uso da API da Steam (Não testei, mais é uma outra alternativa)
 
