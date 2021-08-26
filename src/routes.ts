@@ -1,5 +1,4 @@
 import axios from "axios";
-import { createHash } from "crypto";
 import { Router, Request, Response } from "express";
 
 import { FavoriteDatabase, FavoriteGame } from "./FavoriteDatabase";
@@ -14,28 +13,12 @@ const api = axios.create();
 
 const favoritesDatabase = new FavoriteDatabase();
 
-/*
-DEV API - THIS API IS PAY
-http://api.steampowered.com/<interface name>/<method name>/v<version>/?key=<api key>&format=<format>
-
-DEV API - FREE
-https://api.steampowered.com/ISteamApps/GetAppList/v2/
-
-LIST ALL APPS
-http://api.steampowered.com/ISteamApps/GetAppList/v0002/?key=STEAMKEY&format=json
-
-LIST APP DETAILS
-http://store.steampowered.com/api/appdetails?appids={APP_ID}
-*/
-
 type SteamGetAppList = {
   appid: number;
   name: string;
 };
 
 type GameDetails = any;
-
-type SteamGetAppListWithDetails = SteamGetAppList & { gameDetails: any };
 
 type SteamAPIResponse = {
   applist: {
@@ -59,17 +42,10 @@ routes.get("/favorites", async (request: Request, response: Response) => {
     });
   }
 
-  const userHasAddedFavorites = favoritesDatabase.has(userHash);
-
   const favoriteGames = favoritesDatabase.findGamesByUserHash(userHash);
 
-  const favoriteGamesIsEmpty = favoriteGames?.length <= 0;
-
-  if (!userHasAddedFavorites || favoriteGamesIsEmpty) {
-    return response.status(400).json({
-      error: 400,
-      message: "Este usuário não possui jogos adicionados aos favoritos",
-    });
+  if (!favoriteGames) {
+    return response.status(204).send();
   }
 
   async function getGameDetailsFromSteamAPI(gameId: number) {
@@ -175,7 +151,15 @@ routes.get("/:id", async (request: Request, response: Response) => {
 });
 
 routes.post("/favorites", (request: Request, response: Response) => {
-  const { login, rating, game_id: gameId } = request.body;
+  const userHash = request.headers["user-hash"] as string;
+
+  const { rating, game_id: gameId } = request.body;
+
+  if (!userHash) {
+    return response.status(400).json({
+      message: 'Informe um "user-hash"',
+    });
+  }
 
   if (rating < 0 || rating > 5) {
     return response.status(400).json({
@@ -184,12 +168,10 @@ routes.post("/favorites", (request: Request, response: Response) => {
     });
   }
 
-  const encryptedUserHash = createHash("md5").update(login).digest("hex");
-
   const favorite: FavoriteGame = {
     rating,
     game_id: gameId,
-    user_hash: encryptedUserHash,
+    user_hash: userHash,
   };
 
   const userAlreadyExists = favoritesDatabase.findGamesByUserHash(
@@ -221,8 +203,7 @@ routes.delete("/favorites/:game_id", (request: Request, response: Response) => {
   const userHash = request.headers["user-hash"] as string;
 
   if (!userHash) {
-    return response.status(400).json({
-      error: 400,
+    return response.status(409).json({
       message: 'Informe um "user-hash"',
     });
   }
@@ -230,25 +211,22 @@ routes.delete("/favorites/:game_id", (request: Request, response: Response) => {
   const userHasAddedFavorites = favoritesDatabase.has(userHash);
 
   if (!userHasAddedFavorites) {
-    return response.status(400).json({
-      message: "Este usuário não adicionou nenhum jogo aos favoritos",
+    return response.status(409).json({
+      message: "Este jogo já foi removido dos favoritos pelo usuário",
     });
   }
 
   const favorite = favoritesDatabase.findByGameId(userHash, gameId);
 
   if (!favorite) {
-    return response.status(400).json({
+    return response.status(409).json({
       message: "Este jogo já foi removido dos favoritos pelo usuário",
     });
   }
 
   favoritesDatabase.deleteByGameId(userHash, gameId);
 
-  return response.json({
-    delete: true,
-    favorite,
-  });
+  return response.status(200).send();
 });
 
 export { routes };
