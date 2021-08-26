@@ -107,7 +107,7 @@ routes.get("/favorites", async (request: Request, response: Response) => {
   return response.json(favorites);
 });
 
-routes.get("/", async (_, response: Response) => {
+routes.get("/", async (request: Request, response: Response) => {
   function getGamesFromCache() {
     const gamesFromCache = cache.find<SteamGetAppList[]>("steam-apps");
 
@@ -117,7 +117,7 @@ routes.get("/", async (_, response: Response) => {
   const gamesAlreadyCached = getGamesFromCache();
 
   if (gamesAlreadyCached.length > 0) {
-    return response.json(gamesAlreadyCached);
+    return response.status(200).json(gamesAlreadyCached);
   }
 
   const { data } = await api.get<SteamAPIResponse>(
@@ -128,7 +128,7 @@ routes.get("/", async (_, response: Response) => {
 
   cache.add("steam-apps", games);
 
-  return response.json(games);
+  return response.status(200).json(games);
 });
 
 routes.get("/:id", async (request: Request, response: Response) => {
