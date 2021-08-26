@@ -18,7 +18,9 @@ export class FavoriteDatabase extends Map<string, FavoriteGame[]> {
   }
 
   public findGamesByUserHash(userHash: string) {
-    return this.get(userHash);
+    const games = this.get(userHash);
+
+    return games;
   }
 
   public findByGameId(userHash: string, gameId: number) {
