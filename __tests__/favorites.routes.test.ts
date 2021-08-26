@@ -23,7 +23,7 @@ const agent = supertest(app);
         ...fakeFavoriteGame,
         rating: 10,
       })
-      .expect(400)
+      .expect(409)
       .end((error) => {
         if (error) throw error;
 
@@ -43,7 +43,7 @@ const agent = supertest(app);
         ...fakeFavoriteGame,
         rating: 10,
       })
-      .expect(400)
+      .expect(409)
       .end((error) => {
         if (error) throw error;
 
