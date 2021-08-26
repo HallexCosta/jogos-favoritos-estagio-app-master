@@ -35,15 +35,9 @@ type FavoriteGameWithDetails = FavoriteGame & {
 routes.get("/favorites", async (request: Request, response: Response) => {
   const userHash = request.headers["user-hash"] as string;
 
-  if (!userHash) {
-    return response.status(403).json({
-      message: 'Informe um "user-hash"',
-    });
-  }
-
   const favoriteGames = favoritesDatabase.findGamesByUserHash(userHash);
 
-  if (!favoriteGames) {
+  if (!favoriteGames || favoriteGames.length === 0) {
     return response.status(204).send();
   }
 
